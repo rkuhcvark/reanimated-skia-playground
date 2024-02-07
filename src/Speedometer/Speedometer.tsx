@@ -98,28 +98,36 @@ const Speedometer = () => {
   }
 
   const Needle = () => {
+    const topWidth = 10
+    const bottomWidth = topWidth / 2
+    const height = 100
+
     const path = useDerivedValue(() => {
       const path = Skia.Path.Make()
 
-      path.moveTo(cx - 15, cy)
-      path.lineTo(cx + 15, cy)
-      path.lineTo(cx + 5, cy - 130)
-      path.lineTo(cx - 5, cy - 130)
+      path.moveTo(cx - topWidth, cy)
+      path.lineTo(cx + topWidth, cy)
+      path.lineTo(cx + bottomWidth, cy - height)
+      path.lineTo(cx - bottomWidth, cy - height)
 
       return path
     })
 
     const transform = useDerivedValue(() => {
+      const startAngleRadians = startAngle * (Math.PI / 180)
+      const currentAngleRadians = (sweepAngle.value + startAngle) * (Math.PI / 180)
+      const rotate = currentAngleRadians - startAngleRadians * 2
+
       return [
         {
-          rotate: sweepAngle.value / Math.PI,
+          rotate,
         },
       ]
     })
 
     return (
       <Group transform={transform} origin={{ x: cx, y: cy }}>
-        <Path path={path}>
+        <Path path={path} origin={{ x: cx, y: cy }}>
           <LinearGradient
             start={vec(cx, cy)} // Start point of gradient
             end={vec(cx, cy - 130)} // End point of gradient

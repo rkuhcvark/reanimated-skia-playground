@@ -16,6 +16,8 @@ import {
   TileMode,
   vec,
   Path,
+  LinearGradient,
+  SweepGradient,
 } from '@shopify/react-native-skia'
 
 import Slider from '@react-native-community/slider'
@@ -95,16 +97,51 @@ const Speedometer = () => {
     )
   }
 
+  const Needle = () => {
+    const path = useDerivedValue(() => {
+      const path = Skia.Path.Make()
+
+      path.moveTo(cx - 15, cy)
+      path.lineTo(cx + 15, cy)
+      path.lineTo(cx + 5, cy - 130)
+      path.lineTo(cx - 5, cy - 130)
+
+      return path
+    })
+
+    const transform = useDerivedValue(() => {
+      return [
+        {
+          rotate: sweepAngle.value / Math.PI,
+        },
+      ]
+    })
+
+    return (
+      <Group transform={transform} origin={{ x: cx, y: cy }}>
+        <Path path={path}>
+          <LinearGradient
+            start={vec(cx, cy)} // Start point of gradient
+            end={vec(cx, cy - 130)} // End point of gradient
+            colors={['rgba(255,255,255,0)', 'rgba(255,255,255,1)']} // Colors for the gradient
+          />
+        </Path>
+      </Group>
+    )
+  }
+
   const handleValueChange = (value: number) => {
     speed.value = value
   }
 
   return (
     <View style={{ flex: 1, backgroundColor: 'rgb(20,25,32)' }}>
-      <Canvas style={{ flex: 1 }} mode='continuous'>
+      <Canvas style={{ flex: 1 }}>
         <BackgroundArc />
         <ActiveArc />
         <ShadowArc />
+
+        <Needle />
       </Canvas>
 
       <View style={{ flex: 1 / 3 }}>

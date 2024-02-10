@@ -18,6 +18,14 @@ import {
   Path,
   LinearGradient,
   SweepGradient,
+  Paint,
+  RadialGradient,
+  Shadow,
+  BlurMask,
+  Turbulence,
+  Blend,
+  Shader,
+  Vertices,
 } from '@shopify/react-native-skia'
 
 import Slider from '@react-native-community/slider'
@@ -38,6 +46,8 @@ const Speedometer = () => {
   const startAngle = 135
   const endAngle = 405
   const maxValue = 100 // Maximum value of the speedometer
+
+  const backgroundColor = 'rgb(20,25,32)'
 
   const sweepAngle = useDerivedValue(() => {
     return (endAngle - startAngle) * (speed.value / maxValue)
@@ -79,10 +89,25 @@ const Speedometer = () => {
     return <Path path={path} style='stroke' strokeWidth={strokeWidth} color='#00ABE7' />
   }
 
-  const ShadowArc = () => {
+  const SolidArc = () => {
     const path = useDerivedValue(() => {
       const path = Skia.Path.Make()
-      const _r = r - strokeWidth
+      const getPos = (value: number) => {
+        return value - r / 2
+      }
+
+      path.addArc({ x: getPos(cx), y: getPos(cy), width: r, height: r }, endAngle, startAngle - 45)
+
+      return path
+    })
+
+    return <Path path={path} style='stroke' strokeWidth={r} color={backgroundColor} />
+  }
+
+  const ShadowArc = () => {
+    const _r = r - strokeWidth + 5
+    const path = useDerivedValue(() => {
+      const path = Skia.Path.Make()
       path.addArc(
         { x: cx - _r, y: cy - _r, width: _r * 2, height: _r * 2 },
         startAngle,
@@ -93,7 +118,14 @@ const Speedometer = () => {
     })
 
     return (
-      <Path path={path} style='stroke' strokeWidth={strokeWidth} color='rgba(0, 171, 231, 0.2)' />
+      <Path
+        path={path}
+        style='stroke'
+        strokeWidth={strokeWidth}
+        opacity={0.5}
+        color='rgba(0, 171, 231, 1)'>
+        <BlurMask blur={30} respectCTM={false} />
+      </Path>
     )
   }
 
@@ -143,12 +175,12 @@ const Speedometer = () => {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: 'rgb(20,25,32)' }}>
+    <View style={{ flex: 1, backgroundColor }}>
       <Canvas style={{ flex: 1 }}>
         <BackgroundArc />
         <ActiveArc />
         <ShadowArc />
-
+        <SolidArc />
         <Needle />
       </Canvas>
 

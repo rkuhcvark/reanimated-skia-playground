@@ -34,10 +34,12 @@ import {
   Paragraph,
   TextAlign,
   SkTextStyle,
+  interpolateColors,
+  interpolate,
 } from '@shopify/react-native-skia'
 
 import Slider from '@react-native-community/slider'
-import { runOnUI, useDerivedValue, useSharedValue } from 'react-native-reanimated'
+import { runOnUI, useDerivedValue, useSharedValue, withTiming } from 'react-native-reanimated'
 
 const ticks = [0, 5, 10, 20, 30, 50, 75, 100]
 
@@ -47,6 +49,7 @@ const Speedometer = () => {
 
   const customFontMgr = useFonts({
     Gauge: [require('../../assets/fonts/Gauge-Regular.ttf')],
+    Montserrat: [require('../../assets/fonts/Montserrat-Bold.ttf')],
   })
 
   const strokeWidth = 25
@@ -56,12 +59,15 @@ const Speedometer = () => {
 
   const startAngle = 135
   const endAngle = 405
-  const maxValue = 100 // Maximum value of the speedometer
+  const maxValue = 220 // Maximum value of the speedometer
 
   const backgroundColor = 'rgb(20,25,32)'
 
   const sweepAngle = useDerivedValue(() => {
-    return (endAngle - startAngle) * (speed.value / maxValue)
+    const angle = (endAngle - startAngle) * (speed.value / maxValue)
+    console.log('angle', angle)
+
+    return angle
   })
 
   const BackgroundArc = () => {
@@ -203,22 +209,48 @@ const Speedometer = () => {
     )
   }
 
-  const ticks = [0, 1, 5, 10, 20, 30, 50, 75, 100]
+  const calculateTickPosition = (value, maxVal, radius, startAngle, endAngle) => {
+    const angle = (value / maxVal) * (endAngle - startAngle) + startAngle
+
+    console.log('angle', angle)
+
+    const x = cx - 20 + radius * Math.cos(angle)
+    const y = cy + radius * Math.sin(angle)
+    return { x, y, angle }
+  }
 
   const Tick = ({ number }: { number: number }) => {
-    const font = matchFont({
-      fontSize: 16,
-      fontWeight: 'bold',
-    })
+    const alpha = useSharedValue(0.5)
+    const paragraph = useDerivedValue(() => {
+      if (!customFontMgr) {
+        return null
+      }
 
-    const r = _r
+      const paragraphStyle = {
+        textAlign: TextAlign.Center,
+      }
 
-    const angleRange = endAngle - startAngle
-    const angle = startAngle + angleRange * (number / 100)
-    const x = r * Math.cos(angle) + r
-    const y = r * Math.sin(angle) + r
+      alpha.value = interpolate(speed.value, [0, number - 10, number], [0.5, 0.5, 1])
 
-    return <Text x={x} y={y} font={font} text={number.toString()} color='white' />
+      const textStyle = {
+        color: Skia.Color(`rgba(255,255,255,${alpha.value})`),
+        fontFamilies: ['Montserrat'],
+        fontSize: 16,
+      }
+
+      return Skia.ParagraphBuilder.Make(paragraphStyle, customFontMgr)
+        .pushStyle(textStyle)
+        .addText(number.toString())
+        .build()
+    }, [customFontMgr])
+
+    const startAngle = -Math.PI - 0.7 // Starting from the left
+    const endAngle = 0.7 // To the right (half-circle)
+
+    const r = _r + strokeWidth * 1.3
+    const { x, y, angle } = calculateTickPosition(number, maxValue, r, startAngle, endAngle)
+
+    return <Paragraph x={x} y={y} width={40} paragraph={paragraph} />
   }
 
   const SpeedParagraph = () => {
@@ -243,7 +275,7 @@ const Speedometer = () => {
         fontSize: 42,
       }
 
-      const text = speed.value.toFixed(2).toString()
+      const text = `${speed.value.toFixed(0).toString()} km/h`
 
       return Skia.ParagraphBuilder.Make(paragraphStyle, customFontMgr)
         .pushStyle(textStyle)
@@ -252,7 +284,7 @@ const Speedometer = () => {
         .build()
     }, [customFontMgr])
 
-    return <Paragraph paragraph={paragraph} x={cx - r + 5} y={cy + r + 20} width={90} />
+    return <Paragraph paragraph={paragraph} x={cx - r + 5} y={cy + r + 20} width={100} />
   }
 
   const SpeedCounter = () => {
@@ -304,6 +336,9 @@ const Speedometer = () => {
     speed.value = value
   }
 
+  // const ticks = [0, 1, 5, 10, 20, 30, 50, 75, 100]
+  const ticks = [0, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200, 220]
+
   return (
     <View style={{ flex: 1, backgroundColor }}>
       <Canvas style={{ flex: 1 }}>
@@ -311,12 +346,11 @@ const Speedometer = () => {
         <ShadowArc />
         <NegativeArc />
         <Needle />
-        {/* {ticks.map((tick, i) => (
-          <Tick key={i} number={tick} />
-        ))} */}
-        {/* <SpeedCounter /> */}
         <BackgroundArc />
         <SpeedParagraph />
+        {ticks.map((tick, i) => (
+          <Tick key={i} number={tick} />
+        ))}
 
         {/* <Dummy /> */}
       </Canvas>
@@ -325,7 +359,7 @@ const Speedometer = () => {
         <Slider
           style={{ width: width / 2, height: 40, left: width / 4 }}
           minimumValue={0}
-          maximumValue={100}
+          maximumValue={maxValue}
           minimumTrackTintColor='#FFFFFF'
           maximumTrackTintColor='#000000'
           value={speed.value}

@@ -1,7 +1,7 @@
 /** @format */
 
-import { StyleSheet, Text, View, useWindowDimensions } from 'react-native'
-import React, { useCallback, useEffect, useState } from 'react'
+import { StyleSheet, View, useWindowDimensions } from 'react-native'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Canvas,
   Fill,
@@ -26,6 +26,13 @@ import {
   Blend,
   Shader,
   Vertices,
+  Text,
+  matchFont,
+  useFonts,
+  useFont,
+  clamp,
+  Paragraph,
+  TextAlign,
 } from '@shopify/react-native-skia'
 
 import Slider from '@react-native-community/slider'
@@ -35,7 +42,6 @@ const ticks = [0, 5, 10, 20, 30, 50, 75, 100]
 
 const Speedometer = () => {
   const { width, height } = useWindowDimensions()
-
   const speed = useSharedValue(0)
 
   const strokeWidth = 25
@@ -192,6 +198,69 @@ const Speedometer = () => {
     )
   }
 
+  const ticks = [0, 1, 5, 10, 20, 30, 50, 75, 100]
+
+  const Tick = ({ number }: { number: number }) => {
+    const font = matchFont({
+      fontSize: 16,
+      fontWeight: 'bold',
+    })
+
+    const r = _r
+
+    const angleRange = endAngle - startAngle
+    const angle = startAngle + angleRange * (number / 100)
+    const x = r * Math.cos(angle) + r
+    const y = r * Math.sin(angle) + r
+
+    return <Text x={x} y={y} font={font} text={number.toString()} color='white' />
+  }
+
+  const SpeedCounter = () => {
+    const font = useFont(require('../../assets/fonts/Gauge-Regular.ttf'), 42)
+
+    const r = _r * 0.75
+
+    const text = useDerivedValue(() => {
+      return `${speed.value.toFixed(2).toString()}`
+    })
+
+    const d = 7,
+      base = 29
+
+    const transform = useDerivedValue(() => {
+      const digitLength = speed.value.toFixed(0).toString().length
+      const translateX = cx - base - d * clamp(digitLength - 1, 0, Infinity)
+
+      return [
+        {
+          translateX,
+        },
+      ]
+    })
+
+    return (
+      <Text
+        y={cy + 5 + r}
+        font={font}
+        text={text}
+        color='rgba(255,255,255,1)'
+        transform={transform}
+      />
+    )
+  }
+
+  const Dummy = () => {
+    const path = Skia.Path.Make()
+
+    path.addCircle(cx - 20, cy + _r, 5)
+
+    path.addRect({ x: cx - 60, y: cy + _r, height: 50, width: 10 })
+    path.addRect({ x: cx + 50, y: cy + _r, height: 50, width: 10 })
+
+    return <Path path={path} color='red' />
+  }
+
   const handleValueChange = (value: number) => {
     speed.value = value
   }
@@ -203,7 +272,13 @@ const Speedometer = () => {
         <ShadowArc />
         <NegativeArc />
         <Needle />
+        {ticks.map((tick, i) => (
+          <Tick key={i} number={tick} />
+        ))}
+        <SpeedCounter />
         <BackgroundArc />
+
+        {/* <Dummy /> */}
       </Canvas>
 
       <View style={{ flex: 1 / 3 }}>
@@ -223,4 +298,13 @@ const Speedometer = () => {
 
 export default Speedometer
 
-const styles = StyleSheet.create({})
+const styles = StyleSheet.create({
+  tickLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  speedLabel: {
+    fontSize: 32,
+    fontWeight: 'bold',
+  },
+})

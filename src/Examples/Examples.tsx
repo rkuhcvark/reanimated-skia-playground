@@ -12,6 +12,10 @@ const examples = [
     screen: 'Speedometer',
     title: '💯 Speedometer',
   },
+  {
+    screen: 'Sample',
+    title: 'Sample',
+  },
 ] as const
 
 const Examples = () => {

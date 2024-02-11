@@ -39,7 +39,7 @@ const Speedometer = () => {
   const speed = useSharedValue(0)
 
   const strokeWidth = 25
-  const r = width / 3 // Radius of the speedometer
+  const _r = width / 3 // Radius of the speedometer
   const cx = width / 2 // Center x-coordinate
   const cy = height / 2 // Center y-coordinate
 
@@ -55,6 +55,7 @@ const Speedometer = () => {
 
   const BackgroundArc = () => {
     const path = useDerivedValue(() => {
+      const r = _r
       const path = Skia.Path.Make()
       path.addArc(
         { x: cx - r, y: cy - r, width: r * 2, height: r * 2 },
@@ -77,6 +78,7 @@ const Speedometer = () => {
   const ActiveArc = () => {
     const path = useDerivedValue(() => {
       const path = Skia.Path.Make()
+      const r = _r
       path.addArc(
         { x: cx - r, y: cy - r, width: r * 2, height: r * 2 },
         startAngle,
@@ -89,42 +91,47 @@ const Speedometer = () => {
     return <Path path={path} style='stroke' strokeWidth={strokeWidth} color='#00ABE7' />
   }
 
-  const SolidArc = () => {
-    const innerPath = Skia.Path.Make()
-    const getPos = (value: number) => {
-      return value - r / 2
-    }
+  const NegativeArc = () => {
+    const path = useDerivedValue(() => {
+      const path = Skia.Path.Make()
+      const r = _r - strokeWidth
+      path.addArc(
+        { x: cx - r, y: cy - r, width: r * 2, height: r * 2 },
+        startAngle,
+        -(360 - sweepAngle.value)
+      )
 
-    innerPath.addArc(
-      { x: getPos(cx), y: getPos(cy), width: r, height: r },
-      endAngle,
-      startAngle - 45
-    )
+      return path
+    })
 
-    const outerPath = Skia.Path.Make()
-    const _r = r + strokeWidth
-    outerPath.addArc(
-      { x: cx - _r, y: cy - _r, width: _r * 2, height: _r * 2 },
-      startAngle,
-      sweepAngle.value
-    )
+    const outerPath = useDerivedValue(() => {
+      const path = Skia.Path.Make()
+      const r = _r + strokeWidth
+      path.addArc(
+        { x: cx - r, y: cy - r, width: r * 2, height: r * 2 },
+        startAngle,
+        sweepAngle.value
+      )
+
+      return path
+    })
 
     const color = backgroundColor
 
     return (
       <Group>
-        <Path path={innerPath} style='stroke' strokeWidth={r * 1.57} color={color} />
+        <Path path={path} style='stroke' strokeWidth={strokeWidth * 5} color={color} />
         <Path path={outerPath} style='stroke' strokeWidth={strokeWidth} color={color} />
       </Group>
     )
   }
 
   const ShadowArc = () => {
-    const _r = r - strokeWidth / 2
     const path = useDerivedValue(() => {
       const path = Skia.Path.Make()
+      const r = _r - strokeWidth / 2
       path.addArc(
-        { x: cx - _r, y: cy - _r, width: _r * 2, height: _r * 2 },
+        { x: cx - r, y: cy - r, width: r * 2, height: r * 2 },
         startAngle,
         sweepAngle.value
       )
@@ -192,11 +199,11 @@ const Speedometer = () => {
   return (
     <View style={{ flex: 1, backgroundColor }}>
       <Canvas style={{ flex: 1 }}>
-        <BackgroundArc />
         <ActiveArc />
         <ShadowArc />
-        <SolidArc />
+        <NegativeArc />
         <Needle />
+        <BackgroundArc />
       </Canvas>
 
       <View style={{ flex: 1 / 3 }}>

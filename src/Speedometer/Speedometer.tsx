@@ -33,6 +33,7 @@ import {
   clamp,
   Paragraph,
   TextAlign,
+  SkTextStyle,
 } from '@shopify/react-native-skia'
 
 import Slider from '@react-native-community/slider'
@@ -43,6 +44,10 @@ const ticks = [0, 5, 10, 20, 30, 50, 75, 100]
 const Speedometer = () => {
   const { width, height } = useWindowDimensions()
   const speed = useSharedValue(0)
+
+  const customFontMgr = useFonts({
+    Gauge: [require('../../assets/fonts/Gauge-Regular.ttf')],
+  })
 
   const strokeWidth = 25
   const _r = width / 3 // Radius of the speedometer
@@ -216,6 +221,40 @@ const Speedometer = () => {
     return <Text x={x} y={y} font={font} text={number.toString()} color='white' />
   }
 
+  const SpeedParagraph = () => {
+    if (!customFontMgr) {
+      return null
+    }
+
+    const r = (_r * 0.75) / 2
+
+    const paragraph = useDerivedValue(() => {
+      if (!customFontMgr) {
+        return null
+      }
+
+      const paragraphStyle = {
+        textAlign: TextAlign.Center,
+      }
+
+      const textStyle: SkTextStyle = {
+        color: Skia.Color('white'),
+        fontFamilies: ['Gauge'],
+        fontSize: 42,
+      }
+
+      const text = speed.value.toFixed(2).toString()
+
+      return Skia.ParagraphBuilder.Make(paragraphStyle, customFontMgr)
+        .pushStyle(textStyle)
+        .addText(text)
+        .pushStyle(textStyle)
+        .build()
+    }, [customFontMgr])
+
+    return <Paragraph paragraph={paragraph} x={cx - r + 5} y={cy + r + 20} width={90} />
+  }
+
   const SpeedCounter = () => {
     const font = useFont(require('../../assets/fonts/Gauge-Regular.ttf'), 42)
 
@@ -272,11 +311,12 @@ const Speedometer = () => {
         <ShadowArc />
         <NegativeArc />
         <Needle />
-        {ticks.map((tick, i) => (
+        {/* {ticks.map((tick, i) => (
           <Tick key={i} number={tick} />
-        ))}
-        <SpeedCounter />
+        ))} */}
+        {/* <SpeedCounter /> */}
         <BackgroundArc />
+        <SpeedParagraph />
 
         {/* <Dummy /> */}
       </Canvas>

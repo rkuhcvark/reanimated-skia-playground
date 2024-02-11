@@ -36,6 +36,8 @@ import {
   SkTextStyle,
   interpolateColors,
   interpolate,
+  Rect,
+  TwoPointConicalGradient,
 } from '@shopify/react-native-skia'
 
 import Slider from '@react-native-community/slider'
@@ -105,7 +107,15 @@ const Speedometer = () => {
       return path
     })
 
-    return <Path path={path} style='stroke' strokeWidth={strokeWidth} color='#00ABE7' />
+    return (
+      <Path path={path} style='stroke' strokeWidth={strokeWidth}>
+        <LinearGradient
+          start={vec(0, cy)}
+          end={vec(width, cy)}
+          colors={['rgba(0, 171, 231, 1)', 'blue']}
+        />
+      </Path>
+    )
   }
 
   const NegativeArc = () => {
@@ -163,6 +173,11 @@ const Speedometer = () => {
         strokeWidth={strokeWidth * 1.5}
         opacity={0.5}
         color='rgba(0, 171, 231, 1)'>
+        <LinearGradient
+          start={vec(0, cy)}
+          end={vec(width, cy)}
+          colors={['rgba(0, 171, 231, 1)', 'blue']}
+        />
         <BlurMask blur={30} respectCTM={false} />
       </Path>
     )
@@ -215,7 +230,7 @@ const Speedometer = () => {
     console.log('angle', angle)
 
     const x = cx - 20 + radius * Math.cos(angle)
-    const y = cy + radius * Math.sin(angle)
+    const y = cy - 5 + radius * Math.sin(angle)
     return { x, y, angle }
   }
 
@@ -248,7 +263,7 @@ const Speedometer = () => {
     const endAngle = 0.7 // To the right (half-circle)
 
     const r = _r + strokeWidth * 1.3
-    const { x, y, angle } = calculateTickPosition(number, maxValue, r, startAngle, endAngle)
+    const { x, y } = calculateTickPosition(number, maxValue, r, startAngle, endAngle)
 
     return <Paragraph x={x} y={y} width={40} paragraph={paragraph} />
   }
@@ -351,6 +366,14 @@ const Speedometer = () => {
         {ticks.map((tick, i) => (
           <Tick key={i} number={tick} />
         ))}
+
+        {/* <Rect x={0} y={0} width={width} height={height}>
+          <LinearGradient
+            start={vec(0, cy)}
+            end={vec(width, cy)}
+            colors={['rgba(0, 171, 231, 1)', 'blue']}
+          />
+        </Rect> */}
 
         {/* <Dummy /> */}
       </Canvas>

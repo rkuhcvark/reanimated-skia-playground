@@ -9,18 +9,27 @@ import Examples from './src/Examples/Examples'
 import Speedometer from './src/Speedometer/Speedometer'
 import { NavigationContainer } from '@react-navigation/native'
 import Sample from './src/Examples/Sample'
+import SpeedTest from './src/SpeedTest'
 
 const Stack = createStackNavigator<Routes>()
 
 const AppNavigator = () => (
   <NavigationContainer>
-    <Stack.Navigator initialRouteName='Speedometer'>
+    <Stack.Navigator initialRouteName='SpeedTest'>
       <Stack.Screen name='Examples' component={Examples} />
       <Stack.Screen
         name='Speedometer'
         component={Speedometer}
         options={{
           title: '💯 Speedometer',
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name='SpeedTest'
+        component={SpeedTest}
+        options={{
+          title: '💯 SpeedTest',
           headerShown: false,
         }}
       />

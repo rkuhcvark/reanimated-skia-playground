@@ -2,6 +2,7 @@
 
 import { StyleSheet, View, useWindowDimensions } from 'react-native'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import Reactotron from 'reactotron-react-native'
 import {
   Canvas,
   Fill,
@@ -43,7 +44,7 @@ import {
 import Slider from '@react-native-community/slider'
 import { runOnUI, useDerivedValue, useSharedValue, withTiming } from 'react-native-reanimated'
 
-const ticks = [0, 5, 10, 20, 30, 50, 75, 100]
+const ticks = [0, 1, 5, 10, 20, 30, 50, 75, 100]
 
 const SpeedTest = () => {
   const { width, height } = useWindowDimensions()
@@ -55,26 +56,45 @@ const SpeedTest = () => {
   })
 
   const strokeWidth = 25
-  const _r = width / 3 // Radius of the speedometer
+  const _r = width / 3 + 15 // Radius of the speedometer
   const cx = width / 2 // Center x-coordinate
   const cy = height / 2 // Center y-coordinate
 
   const startAngle = 135
   const endAngle = 405
 
+  const cLength = endAngle - startAngle
+
   const maxValue = 100 // Maximum value of the speedometer
 
   const calculateTickPosition = (value: number, index: number) => {
-    const startAngle = -Math.PI - 0.7 // Starting from the left
-    const endAngle = 0.7 // To the right (half-circle)
-    const angle = ((index * ticks.length * 10) / maxValue) * (endAngle - startAngle) + startAngle
+    const startAngle = -Math.PI - 1 // Starting from the left
+    const endAngle = 1 // To the right (half-circle)
 
-    const r = _r - strokeWidth
+    // let angle = (index / ticks.length) * (endAngle - startAngle) + startAngle
 
-    console.log('angle', angle)
+    const diff = endAngle - startAngle
+    const singleTickAngle = diff / ticks.length
+    const ticksLength = ticks.length
+
+    let angle = startAngle + singleTickAngle * index
+
+    angle = interpolate(index, [0, ticksLength], [startAngle, endAngle]) + singleTickAngle / 2
+
+    Reactotron.log('DEBUG', {
+      startAngle,
+      endAngle,
+      diff,
+      singleTickAngle,
+      value,
+      angle,
+      ticksLength,
+    })
+
+    const r = _r - strokeWidth - 5
 
     const x = cx - 20 + r * Math.cos(angle)
-    const y = cy - 5 + r * Math.sin(angle)
+    const y = cy - 10 + r * Math.sin(angle)
     return { x, y, angle }
   }
 
@@ -84,12 +104,25 @@ const SpeedTest = () => {
     return acc
   }, {})
 
-  console.log('tickData', tickData)
-
   const backgroundColor = 'rgb(20,25,32)'
 
   const sweepAngle = useDerivedValue(() => {
-    const angle = (endAngle - startAngle) * (speed.value / maxValue)
+    // const startAngle = -Math.PI - 1 // Starting from the left
+    // const endAngle = 1 // To the right (half-circle)
+
+    let angle = (endAngle - startAngle) * (speed.value / maxValue)
+
+    let slice = 270 / (ticks.length - 1)
+
+    console.log('slice', slice)
+
+    let arr = ticks.map((_, i) => i * slice)
+
+    console.log('arr', arr)
+
+    angle = interpolate(speed.value, ticks, arr)
+
+    console.log('angle', angle)
 
     return angle
     const iAngle = interpolate(angle, [], [])

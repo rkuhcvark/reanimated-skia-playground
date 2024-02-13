@@ -130,6 +130,37 @@ const SpeedTest = () => {
     return iAngle
   })
 
+  const R = ({ children }) => {
+    return null
+    const x = 38
+    const _width = width - x * 2
+
+    return (
+      <Rect x={x} y={0} width={_width} height={height}>
+        <LinearGradient
+          start={vec(x, cy)}
+          end={vec(_width, cy)}
+          colors={['rgba(37, 169, 253, 1)', 'rgba(109, 255,103, 1)']}
+        />
+      </Rect>
+    )
+  }
+
+  const ArcGradient = () => {
+    const x = 38
+    const _width = width - x * 2
+
+    return (
+      // <Rect x={x} y={0} width={_width} height={height}>
+      <LinearGradient
+        start={vec(x, cy)}
+        end={vec(_width, cy)}
+        colors={['rgba(37, 169, 253, 1)', 'rgba(109, 255,103, 1)']}
+      />
+      // </Rect>
+    )
+  }
+
   const BackgroundArc = () => {
     const path = useDerivedValue(() => {
       const r = _r
@@ -167,11 +198,7 @@ const SpeedTest = () => {
 
     return (
       <Path path={path} style='stroke' strokeWidth={strokeWidth}>
-        <LinearGradient
-          start={vec(0, cy)}
-          end={vec(width, cy)}
-          colors={['rgba(0, 171, 231, 1)', 'blue']}
-        />
+        <ArcGradient />
       </Path>
     )
   }
@@ -225,18 +252,9 @@ const SpeedTest = () => {
     })
 
     return (
-      <Path
-        path={path}
-        style='stroke'
-        strokeWidth={strokeWidth * 1.5}
-        opacity={0.5}
-        color='rgba(0, 171, 231, 1)'>
-        <LinearGradient
-          start={vec(0, cy)}
-          end={vec(width, cy)}
-          colors={['rgba(0, 171, 231, 1)', 'blue']}
-        />
-        <BlurMask blur={30} respectCTM={false} />
+      <Path path={path} style='stroke' strokeWidth={strokeWidth * 1.5} opacity={0.3}>
+        <ArcGradient />
+        <BlurMask blur={50} respectCTM={false} />
       </Path>
     )
   }
@@ -408,13 +426,14 @@ const SpeedTest = () => {
           <Tick key={i} number={tick} />
         ))}
 
-        {/* <Rect x={0} y={0} width={width} height={height}>
-          <LinearGradient
+        <R>
+          {/* <ArcGradient /> */}
+          {/* <LinearGradient
             start={vec(0, cy)}
             end={vec(width, cy)}
-            colors={['rgba(0, 171, 231, 1)', 'blue']}
-          />
-        </Rect> */}
+            colors={['rgba(0, 171, 231, 1)', 'green']}
+          /> */}
+        </R>
 
         {/* <Dummy /> */}
       </Canvas>

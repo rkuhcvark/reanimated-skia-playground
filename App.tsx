@@ -11,6 +11,11 @@ import { NavigationContainer } from '@react-navigation/native'
 import Sample from './src/Examples/Sample'
 import SpeedTest from './src/SpeedTest'
 
+if (__DEV__) {
+  // @ts-ignore
+  import('./ReactotronConfig').then(() => console.log('Reactotron Configured'))
+}
+
 const Stack = createStackNavigator<Routes>()
 
 const AppNavigator = () => (

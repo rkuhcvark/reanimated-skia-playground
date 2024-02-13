@@ -104,7 +104,7 @@ const SpeedTest = () => {
     return acc
   }, {})
 
-  const backgroundColor = 'rgb(20,25,32)'
+  const backgroundColor = 'rgb(15,15,28)'
 
   const sweepAngle = useDerivedValue(() => {
     // const startAngle = -Math.PI - 1 // Starting from the left
@@ -167,20 +167,15 @@ const SpeedTest = () => {
       const path = Skia.Path.Make()
       path.addArc(
         { x: cx - r, y: cy - r, width: r * 2, height: r * 2 },
-        startAngle,
-        endAngle - startAngle
+        endAngle,
+        -(270 - sweepAngle.value)
       )
       return path
     })
 
-    return (
-      <Path
-        path={path}
-        style='stroke'
-        strokeWidth={strokeWidth}
-        color={Skia.Color('rgba(255,255,255,0.2)')}
-      />
-    )
+    const arcBackgroundColor = Skia.Color('rgb(26,33,61)')
+
+    return <Path path={path} style='stroke' strokeWidth={strokeWidth} color={arcBackgroundColor} />
   }
 
   const ActiveArc = () => {
@@ -203,19 +198,7 @@ const SpeedTest = () => {
     )
   }
 
-  const NegativeArc = () => {
-    const path = useDerivedValue(() => {
-      const path = Skia.Path.Make()
-      const r = _r - strokeWidth
-      path.addArc(
-        { x: cx - r, y: cy - r, width: r * 2, height: r * 2 },
-        startAngle,
-        -(360 - sweepAngle.value)
-      )
-
-      return path
-    })
-
+  const OuterNegativeArc = () => {
     const outerPath = useDerivedValue(() => {
       const path = Skia.Path.Make()
       const r = _r + strokeWidth
@@ -230,12 +213,25 @@ const SpeedTest = () => {
 
     const color = backgroundColor
 
-    return (
-      <Group>
-        <Path path={path} style='stroke' strokeWidth={strokeWidth * 5} color={color} />
-        <Path path={outerPath} style='stroke' strokeWidth={strokeWidth} color={color} />
-      </Group>
-    )
+    return <Path path={outerPath} style='stroke' strokeWidth={strokeWidth} color={color} />
+  }
+
+  const NegativeArc = () => {
+    const negativeArc = useDerivedValue(() => {
+      const path = Skia.Path.Make()
+      const r = _r - strokeWidth
+      path.addArc(
+        { x: cx - r, y: cy - r, width: r * 2, height: r * 2 },
+        startAngle,
+        -(360 - sweepAngle.value)
+      )
+
+      return path
+    })
+
+    const color = backgroundColor
+
+    return <Path path={negativeArc} style='stroke' strokeWidth={strokeWidth * 5} color={color} />
   }
 
   const ShadowArc = () => {
@@ -419,8 +415,9 @@ const SpeedTest = () => {
         <ActiveArc />
         <ShadowArc />
         <NegativeArc />
-        <Needle />
+        <OuterNegativeArc />
         <BackgroundArc />
+        <Needle />
         <SpeedParagraph />
         {ticks.map((tick, i) => (
           <Tick key={i} number={tick} />

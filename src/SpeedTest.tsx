@@ -104,7 +104,7 @@ const SpeedTest = () => {
     return acc
   }, {})
 
-  const backgroundColor = 'rgb(15,15,28)'
+  const backgroundColor = 'rgba(15,15,28,1)'
 
   const sweepAngle = useDerivedValue(() => {
     // const startAngle = -Math.PI - 1 // Starting from the left
@@ -179,7 +179,7 @@ const SpeedTest = () => {
   }
 
   const ActiveArc = () => {
-    const path = useDerivedValue(() => {
+    const active = useDerivedValue(() => {
       const path = Skia.Path.Make()
       const r = _r
       path.addArc(
@@ -191,17 +191,43 @@ const SpeedTest = () => {
       return path
     })
 
+    const shadowPath = useDerivedValue(() => {
+      const path = Skia.Path.Make()
+      const r = _r - strokeWidth / 2
+      path.addArc(
+        { x: cx - r, y: cy - r, width: r * 2, height: r * 2 },
+        startAngle,
+        sweepAngle.value
+      )
+
+      return path
+    })
+
     return (
-      <Path path={path} style='stroke' strokeWidth={strokeWidth}>
+      <Group>
+        <Path path={active} style='stroke' strokeWidth={strokeWidth} />
+        <Path path={shadowPath} style='stroke' strokeWidth={strokeWidth * 1.5} opacity={0.3}>
+          <BlurMask blur={50} respectCTM={false} />
+        </Path>
         <ArcGradient />
-      </Path>
+      </Group>
+    )
+
+    return (
+      <Group>
+        <Path path={path} style='stroke' strokeWidth={strokeWidth}>
+          <ArcGradient />
+        </Path>
+        <BlurMask blur={70} style='solid' respectCTM={false} />
+      </Group>
     )
   }
 
   const OuterNegativeArc = () => {
+    // const sw = strokeWidth * 3
     const outerPath = useDerivedValue(() => {
       const path = Skia.Path.Make()
-      const r = _r + strokeWidth
+      const r = _r + strokeWidth * 2
       path.addArc(
         { x: cx - r, y: cy - r, width: r * 2, height: r * 2 },
         startAngle,
@@ -213,7 +239,7 @@ const SpeedTest = () => {
 
     const color = backgroundColor
 
-    return <Path path={outerPath} style='stroke' strokeWidth={strokeWidth} color={color} />
+    return <Path path={outerPath} style='stroke' strokeWidth={strokeWidth * 3} color={'path'} />
   }
 
   const NegativeArc = () => {
@@ -394,15 +420,20 @@ const SpeedTest = () => {
     )
   }
 
-  const Dummy = () => {
+  const FullCircle = () => {
     const path = Skia.Path.Make()
 
-    path.addCircle(cx - 20, cy + _r, 5)
+    const r = _r + strokeWidth / 2
 
-    path.addRect({ x: cx - 60, y: cy + _r, height: 50, width: 10 })
-    path.addRect({ x: cx + 50, y: cy + _r, height: 50, width: 10 })
+    path.addCircle(cx, cy, r)
 
-    return <Path path={path} color='red' />
+    return (
+      <Group style='stroke' strokeWidth={200} color={backgroundColor}>
+        <Circle c={vec(cx, cy)} r={r * 1.63} color={backgroundColor} />
+      </Group>
+    )
+
+    return <Circle c={vec(cx, cy)} r={r} />
   }
 
   const handleValueChange = (value: number) => {
@@ -413,15 +444,16 @@ const SpeedTest = () => {
     <View style={{ flex: 1, backgroundColor }}>
       <Canvas style={{ flex: 1 }}>
         <ActiveArc />
-        <ShadowArc />
+        {/* <ShadowArc /> */}
         <NegativeArc />
-        <OuterNegativeArc />
+        {/* <OuterNegativeArc /> */}
         <BackgroundArc />
         <Needle />
         <SpeedParagraph />
         {ticks.map((tick, i) => (
           <Tick key={i} number={tick} />
         ))}
+        <FullCircle />
 
         <R>
           {/* <ArcGradient /> */}
@@ -431,8 +463,6 @@ const SpeedTest = () => {
             colors={['rgba(0, 171, 231, 1)', 'green']}
           /> */}
         </R>
-
-        {/* <Dummy /> */}
       </Canvas>
 
       <View style={{ flex: 1 / 3 }}>

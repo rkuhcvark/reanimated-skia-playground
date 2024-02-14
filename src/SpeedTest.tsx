@@ -62,34 +62,21 @@ const SpeedTest = () => {
 
   const startAngle = 135
   const endAngle = 405
-
-  const cLength = endAngle - startAngle
+  const arcAnglesDiff = endAngle - startAngle
 
   const maxValue = 100 // Maximum value of the speedometer
 
+  const backgroundColor = 'rgba(15,15,28,1)'
+
   const calculateTickPosition = (value: number, index: number) => {
-    const startAngle = -Math.PI - 1 // Starting from the left
-    const endAngle = 1 // To the right (half-circle)
+    const startAngle = -Math.PI - 1
+    const endAngle = 1
+    const angleDiff = endAngle - startAngle
 
-    // let angle = (index / ticks.length) * (endAngle - startAngle) + startAngle
+    const singleTickAngle = angleDiff / ticks.length
 
-    const diff = endAngle - startAngle
-    const singleTickAngle = diff / ticks.length
-    const ticksLength = ticks.length
-
-    let angle = startAngle + singleTickAngle * index
-
-    angle = interpolate(index, [0, ticksLength], [startAngle, endAngle]) + singleTickAngle / 2
-
-    Reactotron.log('DEBUG', {
-      startAngle,
-      endAngle,
-      diff,
-      singleTickAngle,
-      value,
-      angle,
-      ticksLength,
-    })
+    const angle =
+      interpolate(index, [0, ticks.length], [startAngle, endAngle]) + singleTickAngle / 2
 
     const r = _r - strokeWidth - 5
 
@@ -104,47 +91,11 @@ const SpeedTest = () => {
     return acc
   }, {})
 
-  const backgroundColor = 'rgba(15,15,28,1)'
-
   const sweepAngle = useDerivedValue(() => {
-    // const startAngle = -Math.PI - 1 // Starting from the left
-    // const endAngle = 1 // To the right (half-circle)
+    const output = ticks.map((_, i, arr) => (i * arcAnglesDiff) / (arr.length - 1))
 
-    let angle = (endAngle - startAngle) * (speed.value / maxValue)
-
-    let slice = 270 / (ticks.length - 1)
-
-    console.log('slice', slice)
-
-    let arr = ticks.map((_, i) => i * slice)
-
-    console.log('arr', arr)
-
-    angle = interpolate(speed.value, ticks, arr)
-
-    console.log('angle', angle)
-
-    return angle
-    const iAngle = interpolate(angle, [], [])
-
-    return iAngle
+    return interpolate(speed.value, ticks, output)
   })
-
-  const R = ({ children }) => {
-    return null
-    const x = 38
-    const _width = width - x * 2
-
-    return (
-      <Rect x={x} y={0} width={_width} height={height}>
-        <LinearGradient
-          start={vec(x, cy)}
-          end={vec(_width, cy)}
-          colors={['rgba(37, 169, 253, 1)', 'rgba(109, 255,103, 1)']}
-        />
-      </Rect>
-    )
-  }
 
   const ArcGradient = () => {
     const x = 38
@@ -168,14 +119,14 @@ const SpeedTest = () => {
       path.addArc(
         { x: cx - r, y: cy - r, width: r * 2, height: r * 2 },
         endAngle,
-        -(270 - sweepAngle.value)
+        -(arcAnglesDiff - sweepAngle.value)
       )
       return path
     })
 
-    const arcBackgroundColor = Skia.Color('rgb(26,33,61)')
+    const color = Skia.Color('rgb(26,33,61)')
 
-    return <Path path={path} style='stroke' strokeWidth={strokeWidth} color={arcBackgroundColor} />
+    return <Path path={path} style='stroke' strokeWidth={strokeWidth} color={color} />
   }
 
   const ActiveArc = () => {
@@ -212,37 +163,11 @@ const SpeedTest = () => {
         <ArcGradient />
       </Group>
     )
-
-    return (
-      <Group>
-        <Path path={path} style='stroke' strokeWidth={strokeWidth}>
-          <ArcGradient />
-        </Path>
-        <BlurMask blur={70} style='solid' respectCTM={false} />
-      </Group>
-    )
   }
 
-  const OuterNegativeArc = () => {
-    // const sw = strokeWidth * 3
-    const outerPath = useDerivedValue(() => {
-      const path = Skia.Path.Make()
-      const r = _r + strokeWidth * 2
-      path.addArc(
-        { x: cx - r, y: cy - r, width: r * 2, height: r * 2 },
-        startAngle,
-        sweepAngle.value
-      )
-
-      return path
-    })
-
+  const NegativePath = () => {
     const color = backgroundColor
 
-    return <Path path={outerPath} style='stroke' strokeWidth={strokeWidth * 3} color={'path'} />
-  }
-
-  const NegativeArc = () => {
     const negativeArc = useDerivedValue(() => {
       const path = Skia.Path.Make()
       const r = _r - strokeWidth
@@ -255,29 +180,15 @@ const SpeedTest = () => {
       return path
     })
 
-    const color = backgroundColor
-
-    return <Path path={negativeArc} style='stroke' strokeWidth={strokeWidth * 5} color={color} />
-  }
-
-  const ShadowArc = () => {
-    const path = useDerivedValue(() => {
-      const path = Skia.Path.Make()
-      const r = _r - strokeWidth / 2
-      path.addArc(
-        { x: cx - r, y: cy - r, width: r * 2, height: r * 2 },
-        startAngle,
-        sweepAngle.value
-      )
-
-      return path
-    })
+    const circleR = (_r + strokeWidth / 2) * 1.63
 
     return (
-      <Path path={path} style='stroke' strokeWidth={strokeWidth * 1.5} opacity={0.3}>
-        <ArcGradient />
-        <BlurMask blur={50} respectCTM={false} />
-      </Path>
+      <Group>
+        <Path path={negativeArc} style='stroke' strokeWidth={strokeWidth * 5} color={color} />
+        <Group style='stroke' strokeWidth={200} color={color}>
+          <Circle c={vec(cx, cy)} r={circleR} color={color} />
+        </Group>
+      </Group>
     )
   }
 
@@ -352,13 +263,7 @@ const SpeedTest = () => {
     return <Paragraph x={x} y={y} width={40} paragraph={paragraph} />
   }
 
-  const SpeedParagraph = () => {
-    if (!customFontMgr) {
-      return null
-    }
-
-    const r = (_r * 0.75) / 2
-
+  const SpeedLabel = () => {
     const paragraph = useDerivedValue(() => {
       if (!customFontMgr) {
         return null
@@ -379,61 +284,14 @@ const SpeedTest = () => {
       return Skia.ParagraphBuilder.Make(paragraphStyle, customFontMgr)
         .pushStyle(textStyle)
         .addText(text)
-        .pushStyle(textStyle)
         .build()
     }, [customFontMgr])
 
-    return <Paragraph paragraph={paragraph} x={cx - r + 5} y={cy + r + 20} width={100} />
-  }
+    const r = (_r * 0.75) / 2
+    const x = cx - r + 5
+    const y = cy + r + 20
 
-  const SpeedCounter = () => {
-    const font = useFont(require('../assets/fonts/Gauge-Regular.ttf'), 42)
-
-    const r = _r * 0.75
-
-    const text = useDerivedValue(() => {
-      return `${speed.value.toFixed(2).toString()}`
-    })
-
-    const d = 7,
-      base = 29
-
-    const transform = useDerivedValue(() => {
-      const digitLength = speed.value.toFixed(0).toString().length
-      const translateX = cx - base - d * clamp(digitLength - 1, 0, Infinity)
-
-      return [
-        {
-          translateX,
-        },
-      ]
-    })
-
-    return (
-      <Text
-        y={cy + 5 + r}
-        font={font}
-        text={text}
-        color='rgba(255,255,255,1)'
-        transform={transform}
-      />
-    )
-  }
-
-  const FullCircle = () => {
-    const path = Skia.Path.Make()
-
-    const r = _r + strokeWidth / 2
-
-    path.addCircle(cx, cy, r)
-
-    return (
-      <Group style='stroke' strokeWidth={200} color={backgroundColor}>
-        <Circle c={vec(cx, cy)} r={r * 1.63} color={backgroundColor} />
-      </Group>
-    )
-
-    return <Circle c={vec(cx, cy)} r={r} />
+    return <Paragraph paragraph={paragraph} x={x} y={y} width={100} />
   }
 
   const handleValueChange = (value: number) => {
@@ -442,32 +300,20 @@ const SpeedTest = () => {
 
   return (
     <View style={{ flex: 1, backgroundColor }}>
-      <Canvas style={{ flex: 1 }}>
+      <Canvas style={{ flex: 3 }}>
         <ActiveArc />
-        {/* <ShadowArc /> */}
-        <NegativeArc />
-        {/* <OuterNegativeArc /> */}
+        <NegativePath />
         <BackgroundArc />
         <Needle />
-        <SpeedParagraph />
+        <SpeedLabel />
         {ticks.map((tick, i) => (
           <Tick key={i} number={tick} />
         ))}
-        <FullCircle />
-
-        <R>
-          {/* <ArcGradient /> */}
-          {/* <LinearGradient
-            start={vec(0, cy)}
-            end={vec(width, cy)}
-            colors={['rgba(0, 171, 231, 1)', 'green']}
-          /> */}
-        </R>
       </Canvas>
 
-      <View style={{ flex: 1 / 3 }}>
+      <View style={styles.sliderContainer}>
         <Slider
-          style={{ width: width / 2, height: 40, left: width / 4 }}
+          style={{ width: width / 2 }}
           minimumValue={0}
           maximumValue={maxValue}
           minimumTrackTintColor='#FFFFFF'
@@ -483,12 +329,8 @@ const SpeedTest = () => {
 export default SpeedTest
 
 const styles = StyleSheet.create({
-  tickLabel: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  speedLabel: {
-    fontSize: 32,
-    fontWeight: 'bold',
+  sliderContainer: {
+    flex: 1,
+    alignItems: 'center',
   },
 })

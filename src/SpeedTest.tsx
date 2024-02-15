@@ -1,50 +1,34 @@
 /** @format */
 
 import { StyleSheet, View, useWindowDimensions } from 'react-native'
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import Reactotron from 'reactotron-react-native'
+import React, { FC } from 'react'
 import {
   Canvas,
-  Fill,
-  useDrawCallback,
   Skia,
-  PaintStyle,
-  SkiaView,
   Group,
   Circle,
-  FillType,
-  BlendMode,
-  TileMode,
   vec,
   Path,
   LinearGradient,
-  SweepGradient,
   Paint,
-  RadialGradient,
-  Shadow,
   BlurMask,
-  Turbulence,
-  Blend,
-  Shader,
-  Vertices,
-  Text,
-  matchFont,
   useFonts,
-  useFont,
-  clamp,
   Paragraph,
   TextAlign,
   SkTextStyle,
-  interpolateColors,
   interpolate,
-  Rect,
-  TwoPointConicalGradient,
 } from '@shopify/react-native-skia'
 
 import Slider from '@react-native-community/slider'
-import { runOnUI, useDerivedValue, useSharedValue, withTiming } from 'react-native-reanimated'
+import { runOnUI, useDerivedValue, useSharedValue } from 'react-native-reanimated'
 
 const ticks = [0, 1, 5, 10, 20, 30, 50, 75, 100]
+
+interface TickProps {
+  value: number
+  x: number
+  y: number
+}
 
 const SpeedTest = () => {
   const { width, height } = useWindowDimensions()
@@ -68,29 +52,6 @@ const SpeedTest = () => {
 
   const backgroundColor = 'rgba(15,15,28,1)'
 
-  const calculateTickPosition = (value: number, index: number) => {
-    const startAngle = -Math.PI - 1
-    const endAngle = 1
-    const angleDiff = endAngle - startAngle
-
-    const singleTickAngle = angleDiff / ticks.length
-
-    const angle =
-      interpolate(index, [0, ticks.length], [startAngle, endAngle]) + singleTickAngle / 2
-
-    const r = _r - strokeWidth - 5
-
-    const x = cx - 20 + r * Math.cos(angle)
-    const y = cy - 10 + r * Math.sin(angle)
-    return { x, y, angle }
-  }
-
-  const tickData = ticks.reduce((acc, tick, index) => {
-    acc[tick] = calculateTickPosition(tick, index)
-
-    return acc
-  }, {})
-
   const sweepAngle = useDerivedValue(() => {
     const output = ticks.map((_, i, arr) => (i * arcAnglesDiff) / (arr.length - 1))
 
@@ -98,17 +59,15 @@ const SpeedTest = () => {
   })
 
   const ArcGradient = () => {
-    const x = 38
+    const x = cx - _r - strokeWidth / 2
     const _width = width - x * 2
 
     return (
-      // <Rect x={x} y={0} width={_width} height={height}>
       <LinearGradient
         start={vec(x, cy)}
         end={vec(_width, cy)}
         colors={['rgba(37, 169, 253, 1)', 'rgba(109, 255,103, 1)']}
       />
-      // </Rect>
     )
   }
 
@@ -180,14 +139,14 @@ const SpeedTest = () => {
       return path
     })
 
-    const circleR = (_r + strokeWidth / 2) * 1.63
+    const circleR = _r + strokeWidth / 2
 
     return (
       <Group>
         <Path path={negativeArc} style='stroke' strokeWidth={strokeWidth * 5} color={color} />
-        <Group style='stroke' strokeWidth={200} color={color}>
-          <Circle c={vec(cx, cy)} r={circleR} color={color} />
-        </Group>
+        <Circle c={vec(cx, cy)} r={circleR * 1.5} color='transparent'>
+          <Paint style='stroke' strokeWidth={circleR} color={backgroundColor} />
+        </Circle>
       </Group>
     )
   }
@@ -224,43 +183,13 @@ const SpeedTest = () => {
       <Group transform={transform} origin={{ x: cx, y: cy }}>
         <Path path={path} origin={{ x: cx, y: cy }}>
           <LinearGradient
-            start={vec(cx, cy)} // Start point of gradient
-            end={vec(cx, cy - 130)} // End point of gradient
-            colors={['rgba(255,255,255,0)', 'rgba(255,255,255,1)']} // Colors for the gradient
+            start={vec(cx, cy)}
+            end={vec(cx, cy - 130)}
+            colors={['rgba(255,255,255,0)', 'rgba(255,255,255,1)']}
           />
         </Path>
       </Group>
     )
-  }
-
-  const Tick = ({ number }: { number: number }) => {
-    const alpha = useSharedValue(0.5)
-    const paragraph = useDerivedValue(() => {
-      if (!customFontMgr) {
-        return null
-      }
-
-      const paragraphStyle = {
-        textAlign: TextAlign.Center,
-      }
-
-      alpha.value = interpolate(speed.value, [0, number - 10, number], [0.5, 0.5, 1])
-
-      const textStyle = {
-        color: Skia.Color(`rgba(255,255,255,${alpha.value})`),
-        fontFamilies: ['Montserrat'],
-        fontSize: 16,
-      }
-
-      return Skia.ParagraphBuilder.Make(paragraphStyle, customFontMgr)
-        .pushStyle(textStyle)
-        .addText(number.toString())
-        .build()
-    }, [customFontMgr])
-
-    const { x, y } = tickData[number]
-
-    return <Paragraph x={x} y={y} width={40} paragraph={paragraph} />
   }
 
   const SpeedLabel = () => {
@@ -288,10 +217,54 @@ const SpeedTest = () => {
     }, [customFontMgr])
 
     const r = (_r * 0.75) / 2
-    const x = cx - r + 5
     const y = cy + r + 20
 
-    return <Paragraph paragraph={paragraph} x={x} y={y} width={100} />
+    return <Paragraph paragraph={paragraph} x={0} y={y} width={width} />
+  }
+
+  const Ticks = () => {
+    const endAngle = 1
+    const startAngle = -Math.PI - endAngle
+    const angleDiff = endAngle - startAngle
+    const singleTickAngle = angleDiff / ticks.length
+    const r = _r - strokeWidth - 5
+
+    return ticks.map((value, i) => {
+      const angle = interpolate(i, [0, ticks.length], [startAngle, endAngle]) + singleTickAngle / 2
+
+      const x = cx - 20 + r * Math.cos(angle)
+      const y = cy - 10 + r * Math.sin(angle)
+
+      return <Tick key={value} value={value} x={x} y={y} />
+    })
+  }
+
+  const Tick: FC<TickProps> = ({ value, x, y }) => {
+    const alpha = useSharedValue(0.5)
+    const paragraph = useDerivedValue(() => {
+      if (!customFontMgr) {
+        return null
+      }
+
+      alpha.value = interpolate(speed.value, [0, value - 10, value], [0.5, 0.5, 1])
+
+      const paragraphStyle = {
+        textAlign: TextAlign.Center,
+      }
+
+      const textStyle = {
+        color: Skia.Color(`rgba(255,255,255,${alpha.value})`),
+        fontFamilies: ['Montserrat'],
+        fontSize: 16,
+      }
+
+      return Skia.ParagraphBuilder.Make(paragraphStyle, customFontMgr)
+        .pushStyle(textStyle)
+        .addText(value.toString())
+        .build()
+    }, [customFontMgr])
+
+    return <Paragraph x={x} y={y} width={40} paragraph={paragraph} />
   }
 
   const handleValueChange = (value: number) => {
@@ -306,9 +279,7 @@ const SpeedTest = () => {
         <BackgroundArc />
         <Needle />
         <SpeedLabel />
-        {ticks.map((tick, i) => (
-          <Tick key={i} number={tick} />
-        ))}
+        <Ticks />
       </Canvas>
 
       <View style={styles.sliderContainer}>

@@ -1,37 +1,29 @@
-/** @format */
+import { StatusBar } from 'expo-status-bar';
+import { StyleSheet, Text, View } from 'react-native';
+import { Routes } from './src/Routes';
 
-import { StatusBar } from 'expo-status-bar'
-import { StyleSheet, Text, View } from 'react-native'
-import { Routes } from './src/Routes'
-
-import { createStackNavigator } from '@react-navigation/stack'
-import Examples from './src/Examples/Examples'
-import Speedometer from './src/Speedometer/Speedometer'
-import { NavigationContainer } from '@react-navigation/native'
-import Sample from './src/Examples/Sample'
-import SpeedTest from './src/SpeedTest'
+import { createStackNavigator } from '@react-navigation/stack';
+import Examples from './src/Examples/Examples';
+import { NavigationContainer } from '@react-navigation/native';
+import Sample from './src/Examples/Sample';
+import SpeedTest from './src/SpeedTest';
 
 if (__DEV__) {
   // @ts-ignore
-  import('./ReactotronConfig').then(() => console.log('Reactotron Configured'))
+  import('./ReactotronConfig').then(() => console.log('Reactotron Configured'));
 }
 
-const Stack = createStackNavigator<Routes>()
+const Stack = createStackNavigator<Routes>();
 
 const AppNavigator = () => (
   <NavigationContainer>
-    <Stack.Navigator initialRouteName='SpeedTest'>
-      <Stack.Screen name='Examples' component={Examples} />
+    <Stack.Navigator initialRouteName="SpeedTest">
       <Stack.Screen
-        name='Speedometer'
-        component={Speedometer}
-        options={{
-          title: '💯 Speedometer',
-          headerShown: false,
-        }}
+        name="Examples"
+        component={Examples}
       />
       <Stack.Screen
-        name='SpeedTest'
+        name="SpeedTest"
         component={SpeedTest}
         options={{
           title: '💯 SpeedTest',
@@ -39,7 +31,7 @@ const AppNavigator = () => (
         }}
       />
       <Stack.Screen
-        name='Sample'
+        name="Sample"
         component={Sample}
         options={{
           title: 'Sample',
@@ -48,10 +40,10 @@ const AppNavigator = () => (
       />
     </Stack.Navigator>
   </NavigationContainer>
-)
+);
 
 export default function App() {
-  return <AppNavigator />
+  return <AppNavigator />;
 }
 
 const styles = StyleSheet.create({
@@ -61,4 +53,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-})
+});

@@ -7,6 +7,7 @@ import Examples from './src/Examples/Examples';
 import { NavigationContainer } from '@react-navigation/native';
 import Sample from './src/Examples/Sample';
 import SpeedTest from './src/SpeedTest';
+import { DigitMeter } from './src/DigitMeter';
 
 if (__DEV__) {
   // @ts-ignore
@@ -17,7 +18,7 @@ const Stack = createStackNavigator<Routes>();
 
 const AppNavigator = () => (
   <NavigationContainer>
-    <Stack.Navigator initialRouteName="SpeedTest">
+    <Stack.Navigator initialRouteName="DigitMeter">
       <Stack.Screen
         name="Examples"
         component={Examples}
@@ -27,6 +28,13 @@ const AppNavigator = () => (
         component={SpeedTest}
         options={{
           title: '💯 SpeedTest',
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="DigitMeter"
+        component={DigitMeter}
+        options={{
           headerShown: false,
         }}
       />

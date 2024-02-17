@@ -1,39 +1,47 @@
 /** @format */
 
-import { ScrollView, StyleSheet, Text, View } from 'react-native'
-import React from 'react'
-import { RectButton } from 'react-native-gesture-handler'
-import { useNavigation } from '@react-navigation/native'
-import { StackNavigationProp } from '@react-navigation/stack'
-import { Routes } from '../Routes'
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import React from 'react';
+import { RectButton } from 'react-native-gesture-handler';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { Routes } from '../Routes';
 
 const examples = [
   {
-    screen: 'Speedometer',
+    screen: 'SpeedTest',
+    title: '💯 SpeedTest',
+  },
+  {
+    screen: 'DigitMeter',
     title: '💯 Speedometer',
   },
   {
     screen: 'Sample',
     title: 'Sample',
   },
-] as const
+] as const;
 
 const Examples = () => {
-  const { navigate } = useNavigation<StackNavigationProp<Routes, 'Examples'>>()
+  const { navigate } = useNavigation<StackNavigationProp<Routes, 'Examples'>>();
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}>
       {examples.map(({ screen, title }) => (
-        <RectButton key={screen} onPress={() => navigate(screen)}>
+        <RectButton
+          key={screen}
+          onPress={() => navigate(screen)}>
           <View style={styles.thumbnail}>
             <Text style={styles.title}>{title}</Text>
           </View>
         </RectButton>
       ))}
     </ScrollView>
-  )
-}
+  );
+};
 
-export default Examples
+export default Examples;
 
 const styles = StyleSheet.create({
   container: {
@@ -52,4 +60,4 @@ const styles = StyleSheet.create({
     fontSize: 17,
     lineHeight: 22,
   },
-})
+});

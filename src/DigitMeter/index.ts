@@ -1,1 +1,1 @@
-export * from './DigitMeter'
+export * from "./DigitMeter";

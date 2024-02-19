@@ -1,6 +1,6 @@
 export type Routes = {
-    Examples: undefined
-    Sample: undefined
-    SpeedTest: undefined
-    DigitMeter: undefined
-}
+  Examples: undefined;
+  Sample: undefined;
+  SpeedTest: undefined;
+  DigitMeter: undefined;
+};

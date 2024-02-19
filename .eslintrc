@@ -20,7 +20,7 @@
     "@typescript-eslint/no-non-null-assertion": "off",
     "@typescript-eslint/no-empty-function": "off",
     "react/jsx-uses-react": "error",
-    "react/react-in-jsx-scope": "error",
-    "reanimated/js-function-in-worklet": 0
+    "reanimated/js-function-in-worklet": 0,
+    "import/no-default-export": "off"
   }
 }

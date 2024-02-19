@@ -1,6 +1,8 @@
 {
   "extends": "react-native-wcandillon",
-  "plugins": ["reanimated"],
+  "plugins": [
+    "reanimated"
+  ],
   "parserOptions": {
     "project": "./tsconfig.json"
   },
